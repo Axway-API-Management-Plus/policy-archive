@@ -47,7 +47,6 @@ public abstract class AbstractGatewayPackage extends AbstractMojo {
 
 	public AbstractGatewayPackage() {
 		// TODO Auto-generated constructor stub
-
 	}
 	
 	protected abstract String packageType();
@@ -60,7 +59,7 @@ public abstract class AbstractGatewayPackage extends AbstractMojo {
 		try {
 			
 			String type = packageType();
-			
+
 			File outputFolder = new File(targetFolder, "axway");
 			outputFolder.mkdir();
 
@@ -106,22 +105,30 @@ public abstract class AbstractGatewayPackage extends AbstractMojo {
 			} finally {
 				br.close();
 			}
-			
-			String generatedFile = targetFolder.getPath()+File.separator+name;
 
+			int status = process.waitFor();
+			log.info("Status value " + status);
+			if (status == 0) {
+
+				log.info("Exit value " + process.exitValue());
+				if (process.exitValue() != 0) {
+					throw new MojoFailureException("Error with projpack");
+				}
+
+			} else {
+				throw new MojoFailureException("Error with projpack");
+			}
+			String generatedFile = targetFolder.getPath()+File.separator+name;
 			File artifact = new File(generatedFile+"."+type);
-			
 			log.info("Output path" + artifact.getPath());
-			
 			project.getArtifact().setFile(artifact);
 			log.info("Packaging complete");
-
 		} catch (Exception e) {
-			log.error(e);
+			throw new MojoFailureException("Error with projpack :"+e.getMessage());
 
 		}
 
-		log.info("Deployment Complete....");
+		log.info("projpack Complete....");
 	}
 
 	private String extractJar(File filename, File destDir) throws IOException {
@@ -150,11 +157,8 @@ public abstract class AbstractGatewayPackage extends AbstractMojo {
 			}
 			fileOutputStream.close();
 			inputStream.close();
-
 		}
-
 		jarFile.close();
-
 		return destDir.getAbsolutePath();
 	}
 

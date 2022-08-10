@@ -7,12 +7,10 @@ import org.apache.maven.plugins.annotations.Mojo;
 public class PolPackage extends AbstractGatewayPackage {
 
 	public PolPackage() {
-		// TODO Auto-generated constructor stub
 	}
-	
+
 	@Override
 	protected String packageType() {
-		// TODO Auto-generated method stub
 		return "pol";
 	}
 

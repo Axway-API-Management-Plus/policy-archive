@@ -25,38 +25,28 @@ public abstract class AbstractGatewayPackage extends AbstractMojo {
     private String targetPassphrase;
     @Parameter
     private String projectPassphrase;
-
     @Parameter
     private String projpackPath;
-
     @Parameter
     private String polFilePath;
-
     @Parameter(defaultValue = "${project.basedir}/target", required = true)
     private File targetFolder;
-
     @Component
     private MavenProject project;
-
-    private Log log = getLog();
-
+    private final Log log = getLog();
     public AbstractGatewayPackage() {
-        // TODO Auto-generated constructor stub
     }
 
     protected abstract String packageType();
 
-
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-
         try {
-
             String type = packageType();
-
             File outputFolder = new File(targetFolder, "axway");
-            outputFolder.mkdir();
-
+            if(!outputFolder.mkdir()){
+                throw new MojoFailureException("Unable to create a local directory named axway");
+            }
             log.info("Extracting dependent projects....");
             List<String> inputParam = new ArrayList<>();
             inputParam.add(projpackPath);
@@ -66,12 +56,11 @@ public abstract class AbstractGatewayPackage extends AbstractMojo {
             inputParam.add(name);
             inputParam.add("--type");
             inputParam.add(type);
-
             File[] files = new Filter().finder(new File(targetFolder, "alternateLocation"));
-            for (int i = 0; i < files.length; i++) {
+            for (File file : files) {
                 inputParam.add("--add");
-                log.info("Processing the file : " + files[i].getName());
-                String projDir = extractJar(files[i], outputFolder);
+                log.info("Processing the file : " + file.getName());
+                String projDir = extractJar(file, outputFolder);
                 inputParam.add(projDir);
                 inputParam.add("--projpass-none");
             }
@@ -81,18 +70,14 @@ public abstract class AbstractGatewayPackage extends AbstractMojo {
             ProcessBuilder pb = new ProcessBuilder(inputParam);
             pb.redirectErrorStream(true);
             Process process = pb.start();
-            BufferedReader br = null;
 
-            try {
-                br = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                String line = null;
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
                 log.info("-----------------------------------------------------");
                 while ((line = br.readLine()) != null) {
                     log.info(line);
                 }
                 log.info("-----------------------------------------------------");
-            } finally {
-                br.close();
             }
             int status = process.waitFor();
             log.info("Status value " + status);
@@ -149,18 +134,9 @@ public abstract class AbstractGatewayPackage extends AbstractMojo {
         return destDir.getAbsolutePath();
     }
 
-    public class Filter {
-
+    public static class Filter {
         public File[] finder(File dir) {
-
-            return dir.listFiles(new FilenameFilter() {
-                public boolean accept(File dir, String filename) {
-                    return filename.endsWith(".jar");
-                }
-            });
-
+            return dir.listFiles((dir1, filename) -> filename.endsWith(".jar"));
         }
-
     }
-
 }

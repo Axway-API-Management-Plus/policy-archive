@@ -44,9 +44,7 @@ public abstract class AbstractGatewayPackage extends AbstractMojo {
         try {
             String type = packageType();
             File outputFolder = new File(targetFolder, "axway");
-            if(!outputFolder.mkdir()){
-                throw new MojoFailureException("Unable to create a local directory named axway");
-            }
+            outputFolder.mkdir();
             log.info("Extracting dependent projects....");
             List<String> inputParam = new ArrayList<>();
             inputParam.add(projpackPath);
@@ -70,7 +68,6 @@ public abstract class AbstractGatewayPackage extends AbstractMojo {
             ProcessBuilder pb = new ProcessBuilder(inputParam);
             pb.redirectErrorStream(true);
             Process process = pb.start();
-
             try (BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                 String line;
                 log.info("-----------------------------------------------------");
